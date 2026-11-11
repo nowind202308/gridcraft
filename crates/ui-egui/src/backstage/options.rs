@@ -31,6 +31,12 @@ pub(super) fn options(app: &mut SheetApp, ui: &mut Ui) {
     if ui.checkbox(&mut autosave, lang.tr("Save .xlsx workbooks automatically after every change")).changed() {
         app.toggle_autosave();
     }
+    ui.add_space(18.0);
+    section(ui, lang, "Options|Updates");
+    let mut check = app.ui.update_check_at_startup;
+    if ui.checkbox(&mut check, lang.tr("Check for updates when the app starts")).changed() {
+        app.ui.update_check_at_startup = check;
+    }
     let Some((calc, view)) = app.session.active().map(|d| (d.wb.calc.clone(), d.wb.view)) else { return };
     ui.add_space(18.0);
     // Excel's Advanced › Display options for this workbook: saved with the workbook (#3101).

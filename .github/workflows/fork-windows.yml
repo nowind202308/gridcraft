@@ -1,0 +1,54 @@
+# Personal fork build: GridCraft with the Traditional Chinese interface, for Windows.
+# Builds the zh-hant branch and publishes a portable zip to this fork's Releases.
+name: Fork build (Windows, zh-hant)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [zh-hant]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: gridcraft
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          path: craft-fonts
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: gridcraft
+      - name: Build
+        working-directory: gridcraft
+        shell: bash
+        env:
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+        run: cargo build --release -p gridcraft
+      - name: Package
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path gridcraft/Cargo.toml -Pattern '^version = "(.+)"' | Select-Object -First 1).Matches.Groups[1].Value
+          $name = "GridCraft-$v-zh-hant-windows-x64"
+          New-Item -ItemType Directory -Path $name | Out-Null
+          Copy-Item gridcraft/target/release/gridcraft.exe $name/
+          Copy-Item gridcraft/LICENSE* $name/ -ErrorAction SilentlyContinue
+          Compress-Archive -Path $name -DestinationPath "$name.zip"
+          "ZIP=$name.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "TAG=zh-hant-v$v-$(Get-Date -Format yyyyMMdd-HHmm)" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: gridcraft
+        run: |
+          gh release create "$TAG" "../$ZIP" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "GridCraft 繁體中文 ($TAG)" \
+            --notes "個人 fork 版：繁體中文（台灣用語）介面；檔案 › 選項 › 儲存 › 更新 可開關啟動時的官方更新檢查（預設關閉）。解壓後執行 gridcraft.exe。"
