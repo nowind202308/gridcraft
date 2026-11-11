@@ -4,6 +4,9 @@
 pub(super) fn translate(text: &str) -> Option<&'static str> {
     Some(match text {
         "Paste" => "貼上",
+        "Diagram" => "圖示",
+        "Header Menu|Insert" => "插入",
+        "Decorative Text" => "裝飾文字",
         "Paste Values" => "貼上值",
         "Paste Formulas" => "貼上公式",
         "Paste Formatting" => "貼上格式",
